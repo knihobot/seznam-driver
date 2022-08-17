@@ -7,7 +7,7 @@ export default class SeznamDriverProvider {
     const Ally = this.app.container.resolveBinding('Adonis/Addons/Ally')
     const { SeznamDriver } = await import('../src/SeznamDriver')
 
-    Ally.extend('yourdriver', (_, __, config, ctx) => {
+    Ally.extend('seznam', (_, __, config, ctx) => {
       return new SeznamDriver(ctx, config)
     })
   }
