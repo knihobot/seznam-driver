@@ -26,7 +26,7 @@ class SeznamDriverProvider {
     async boot() {
         const Ally = this.app.container.resolveBinding('Adonis/Addons/Ally');
         const { SeznamDriver } = await Promise.resolve().then(() => __importStar(require('../src/SeznamDriver')));
-        Ally.extend('yourdriver', (_, __, config, ctx) => {
+        Ally.extend('seznam', (_, __, config, ctx) => {
             return new SeznamDriver(ctx, config);
         });
     }
