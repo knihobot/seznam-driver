@@ -1,14 +1,14 @@
 import type { ApplicationContract } from '@ioc:Adonis/Core/Application'
 
-export default class YourDriverProvider {
+export default class SeznamDriverProvider {
   constructor(protected app: ApplicationContract) {}
 
   public async boot() {
     const Ally = this.app.container.resolveBinding('Adonis/Addons/Ally')
-    const { YourDriver } = await import('../src/YourDriver')
+    const { SeznamDriver } = await import('../src/SeznamDriver')
 
     Ally.extend('yourdriver', (_, __, config, ctx) => {
-      return new YourDriver(ctx, config)
+      return new SeznamDriver(ctx, config)
     })
   }
 }

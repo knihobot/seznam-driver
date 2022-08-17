@@ -18,12 +18,8 @@ import { Oauth2Driver, ApiRequest } from '@adonisjs/ally/build/standalone'
  * Define the access token object properties in this type. It
  * must have "token" and "type" and you are free to add
  * more properties.
- *
- * ------------------------------------------------
- * Change "YourDriver" to something more relevant
- * ------------------------------------------------
  */
-export type YourDriverAccessToken = {
+export type SeznamDriverAccessToken = {
   token: string
   type: 'bearer'
 }
@@ -31,23 +27,15 @@ export type YourDriverAccessToken = {
 /**
  * Define a union of scopes your driver accepts. Here's an example of same
  * https://github.com/adonisjs/ally/blob/develop/adonis-typings/ally.ts#L236-L268
- *
- * ------------------------------------------------
- * Change "YourDriver" to something more relevant
- * ------------------------------------------------
  */
-export type YourDriverScopes = string
+export type SeznamDriverScopes = 'identity'
 
 /**
  * Define the configuration options accepted by your driver. It must have the following
  * properties and you are free add more.
- *
- * ------------------------------------------------
- * Change "YourDriver" to something more relevant
- * ------------------------------------------------
  */
-export type YourDriverConfig = {
-  driver: 'YourDriverName'
+export type SeznamDriverConfig = {
+  driver: 'SeznamDriver'
   clientId: string
   clientSecret: string
   callbackUrl: string
@@ -58,33 +46,29 @@ export type YourDriverConfig = {
 
 /**
  * Driver implementation. It is mostly configuration driven except the user calls
- *
- * ------------------------------------------------
- * Change "YourDriver" to something more relevant
- * ------------------------------------------------
  */
-export class YourDriver extends Oauth2Driver<YourDriverAccessToken, YourDriverScopes> {
+export class SeznamDriver extends Oauth2Driver<SeznamDriverAccessToken, SeznamDriverScopes> {
   /**
    * The URL for the redirect request. The user will be redirected on this page
    * to authorize the request.
    *
    * Do not define query strings in this URL.
    */
-  protected authorizeUrl = ''
+  protected authorizeUrl = 'https://login.szn.cz/api/v1/oauth/auth'
 
   /**
    * The URL to hit to exchange the authorization code for the access token
    *
    * Do not define query strings in this URL.
    */
-  protected accessTokenUrl = ''
+  protected accessTokenUrl = 'https://login.szn.cz/api/v1/oauth/token'
 
   /**
    * The URL to hit to get the user details
    *
    * Do not define query strings in this URL.
    */
-  protected userInfoUrl = ''
+  protected userInfoUrl = 'https://login.szn.cz/api/v1/user'
 
   /**
    * The param name for the authorization code. Read the documentation of your oauth
@@ -105,7 +89,7 @@ export class YourDriver extends Oauth2Driver<YourDriverAccessToken, YourDriverSc
    * approach is to prefix the oauth provider name to `oauth_state` value. For example:
    * For example: "facebook_oauth_state"
    */
-  protected stateCookieName = 'YourDriver_oauth_state'
+  protected stateCookieName = 'seznam_oauth_state'
 
   /**
    * Parameter name to be used for sending and receiving the state from.
@@ -123,9 +107,9 @@ export class YourDriver extends Oauth2Driver<YourDriverAccessToken, YourDriverSc
   /**
    * The separator indentifier for defining multiple scopes
    */
-  protected scopesSeparator = ' '
+  protected scopesSeparator = ','
 
-  constructor(ctx: HttpContextContract, public config: YourDriverConfig) {
+  constructor(ctx: HttpContextContract, public config: SeznamDriverConfig) {
     super(ctx, config)
 
     /**
@@ -168,7 +152,7 @@ export class YourDriver extends Oauth2Driver<YourDriverAccessToken, YourDriverSc
    */
   public async user(
     callback?: (request: ApiRequest) => void
-  ): Promise<AllyUserContract<YourDriverAccessToken>> {
+  ): Promise<AllyUserContract<SeznamDriverAccessToken>> {
     const accessToken = await this.accessToken()
     const request = this.httpClient(this.config.userInfoUrl || this.userInfoUrl)
 
@@ -183,6 +167,27 @@ export class YourDriver extends Oauth2Driver<YourDriverAccessToken, YourDriverSc
     /**
      * Write your implementation details here
      */
+    const body = await request.get()
+
+    /**
+     * identity (= response body)
+     * Scope identity je povinný a uživatel jej nesmí odmítnout. Díky němu budou v odpovědi na /api/v1/user tyto položky:
+     * oauth_user_id je unikátní trvalý identifikátor uživatelského účtu
+     * username je část uživatelského jména (tj. e-mailové adresy) před zavináčem
+     * domain je část uživatelského jména (tj. e-mailové adresy) za zavináčem
+     * firstname je křestní jméno, pokud jej uživatel vyplnil
+     * lastname je příjmení, pokud jej uživatel vyplnil
+     */
+    return {
+      id: body.oauth_user_id,
+      nickName: body.username,
+      name: body.firstname + ' ' + body.lastname,
+      email: body.username + '@' + body.domain,
+      avatarUrl: null,
+      emailVerificationState: 'verified',
+      original: body,
+      token: accessToken,
+    }
   }
 
   public async userFromToken(
@@ -202,5 +207,26 @@ export class YourDriver extends Oauth2Driver<YourDriverAccessToken, YourDriverSc
     /**
      * Write your implementation details here
      */
+    const body = await request.get()
+
+    /**
+     * identity (= response body)
+     * Scope identity je povinný a uživatel jej nesmí odmítnout. Díky němu budou v odpovědi na /api/v1/user tyto položky:
+     * oauth_user_id je unikátní trvalý identifikátor uživatelského účtu
+     * username je část uživatelského jména (tj. e-mailové adresy) před zavináčem
+     * domain je část uživatelského jména (tj. e-mailové adresy) za zavináčem
+     * firstname je křestní jméno, pokud jej uživatel vyplnil
+     * lastname je příjmení, pokud jej uživatel vyplnil
+     */
+    return {
+      id: body.oauth_user_id,
+      nickName: body.username,
+      name: body.firstname + ' ' + body.lastname,
+      email: body.username + '@' + body.domain,
+      avatarUrl: null,
+      emailVerificationState: 'verified',
+      original: body,
+      token: { token: accessToken, type: 'bearer' },
+    }
   }
 }
