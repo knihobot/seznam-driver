@@ -35,7 +35,7 @@ export type SeznamDriverScopes = 'identity'
  * properties and you are free add more.
  */
 export type SeznamDriverConfig = {
-  driver: 'SeznamDriver'
+  driver: 'seznam'
   clientId: string
   clientSecret: string
   callbackUrl: string
