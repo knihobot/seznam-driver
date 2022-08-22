@@ -12,7 +12,7 @@
 
 import type { AllyUserContract } from '@ioc:Adonis/Addons/Ally'
 import type { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
-import { Oauth2Driver, ApiRequest } from '@adonisjs/ally/build/standalone'
+import { Oauth2Driver, ApiRequest, RedirectRequest } from '@adonisjs/ally/build/standalone'
 
 /**
  * Define the access token object properties in this type. It
@@ -126,7 +126,9 @@ export class SeznamDriver extends Oauth2Driver<SeznamDriverAccessToken, SeznamDr
    * is made by the base implementation of "Oauth2" driver and this is a
    * hook to pre-configure the request.
    */
-  // protected configureRedirectRequest(request: RedirectRequest<YourDriverScopes>) {}
+  protected configureRedirectRequest(request: RedirectRequest<SeznamDriverScopes>) {
+    request.param('response_type', 'code')
+  }
 
   /**
    * Optionally configure the access token request. The actual request is made by

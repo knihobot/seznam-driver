@@ -85,7 +85,9 @@ class SeznamDriver extends standalone_1.Oauth2Driver {
      * is made by the base implementation of "Oauth2" driver and this is a
      * hook to pre-configure the request.
      */
-    // protected configureRedirectRequest(request: RedirectRequest<YourDriverScopes>) {}
+    configureRedirectRequest(request) {
+        request.param('response_type', 'code');
+    }
     /**
      * Optionally configure the access token request. The actual request is made by
      * the base implementation of "Oauth2" driver and this is a hook to pre-configure
