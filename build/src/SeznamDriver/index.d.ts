@@ -17,7 +17,7 @@ export declare type SeznamDriverAccessToken = {
  * Define a union of scopes your driver accepts. Here's an example of same
  * https://github.com/adonisjs/ally/blob/develop/adonis-typings/ally.ts#L236-L268
  */
-export declare type SeznamDriverScopes = 'identity';
+export declare type SeznamDriverScopes = 'identity' | 'contact-phone' | 'avatar';
 /**
  * Define the configuration options accepted by your driver. It must have the following
  * properties and you are free add more.
@@ -30,6 +30,7 @@ export declare type SeznamDriverConfig = {
     authorizeUrl?: string;
     accessTokenUrl?: string;
     userInfoUrl?: string;
+    scopes?: SeznamDriverScopes[];
 };
 /**
  * Driver implementation. It is mostly configuration driven except the user calls

@@ -87,6 +87,7 @@ class SeznamDriver extends standalone_1.Oauth2Driver {
      */
     configureRedirectRequest(request) {
         request.param('response_type', 'code');
+        request.scopes(this.config.scopes || ['identity']);
     }
     /**
      * Optionally configure the access token request. The actual request is made by
@@ -111,6 +112,8 @@ class SeznamDriver extends standalone_1.Oauth2Driver {
     async user(callback) {
         const accessToken = await this.accessToken();
         const request = this.httpClient(this.config.userInfoUrl || this.userInfoUrl);
+        request.header('Authorization', accessToken.type + ' ' + accessToken.token);
+        request.parseAs('json');
         /**
          * Allow end user to configure the request. This should be called after your custom
          * configuration, so that the user can override them (if required)
@@ -143,6 +146,7 @@ class SeznamDriver extends standalone_1.Oauth2Driver {
         };
     }
     async userFromToken(accessToken, callback) {
+        console.log('userfromToken');
         const request = this.httpClient(this.config.userInfoUrl || this.userInfoUrl);
         /**
          * Allow end user to configure the request. This should be called after your custom

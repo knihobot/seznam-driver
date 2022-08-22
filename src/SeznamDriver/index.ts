@@ -28,7 +28,7 @@ export type SeznamDriverAccessToken = {
  * Define a union of scopes your driver accepts. Here's an example of same
  * https://github.com/adonisjs/ally/blob/develop/adonis-typings/ally.ts#L236-L268
  */
-export type SeznamDriverScopes = 'identity'
+export type SeznamDriverScopes = 'identity' | 'contact-phone' | 'avatar'
 
 /**
  * Define the configuration options accepted by your driver. It must have the following
@@ -42,6 +42,7 @@ export type SeznamDriverConfig = {
   authorizeUrl?: string
   accessTokenUrl?: string
   userInfoUrl?: string
+  scopes?: SeznamDriverScopes[]
 }
 
 /**
@@ -128,6 +129,7 @@ export class SeznamDriver extends Oauth2Driver<SeznamDriverAccessToken, SeznamDr
    */
   protected configureRedirectRequest(request: RedirectRequest<SeznamDriverScopes>) {
     request.param('response_type', 'code')
+    request.scopes(this.config.scopes || ['identity'])
   }
 
   /**
@@ -146,6 +148,17 @@ export class SeznamDriver extends Oauth2Driver<SeznamDriverAccessToken, SeznamDr
   }
 
   /**
+   * Returns the HTTP request with the authorization header set
+   */
+  protected getAuthenticatedRequest(url: string, token: string) {
+    const request = this.httpClient(url)
+    request.header('Authorization', `bearer ${token}`)
+    request.header('Accept', 'application/json')
+    request.parseAs('json')
+    return request
+  }
+
+  /**
    * Get the user details by query the provider API. This method must return
    * the access token and the user details both. Checkout the google
    * implementation for same.
@@ -156,47 +169,17 @@ export class SeznamDriver extends Oauth2Driver<SeznamDriverAccessToken, SeznamDr
     callback?: (request: ApiRequest) => void
   ): Promise<AllyUserContract<SeznamDriverAccessToken>> {
     const accessToken = await this.accessToken()
-    const request = this.httpClient(this.config.userInfoUrl || this.userInfoUrl)
-
-    /**
-     * Allow end user to configure the request. This should be called after your custom
-     * configuration, so that the user can override them (if required)
-     */
-    if (typeof callback === 'function') {
-      callback(request)
-    }
-
-    /**
-     * Write your implementation details here
-     */
-    const body = await request.get()
-
-    /**
-     * identity (= response body)
-     * Scope identity je povinný a uživatel jej nesmí odmítnout. Díky němu budou v odpovědi na /api/v1/user tyto položky:
-     * oauth_user_id je unikátní trvalý identifikátor uživatelského účtu
-     * username je část uživatelského jména (tj. e-mailové adresy) před zavináčem
-     * domain je část uživatelského jména (tj. e-mailové adresy) za zavináčem
-     * firstname je křestní jméno, pokud jej uživatel vyplnil
-     * lastname je příjmení, pokud jej uživatel vyplnil
-     */
-    return {
-      id: body.oauth_user_id,
-      nickName: body.username,
-      name: body.firstname + ' ' + body.lastname,
-      email: body.username + '@' + body.domain,
-      avatarUrl: null,
-      emailVerificationState: 'verified',
-      original: body,
-      token: accessToken,
-    }
+    return this.userFromToken(accessToken.token, callback)
   }
 
   public async userFromToken(
     accessToken: string,
     callback?: (request: ApiRequest) => void
   ): Promise<AllyUserContract<{ token: string; type: 'bearer' }>> {
-    const request = this.httpClient(this.config.userInfoUrl || this.userInfoUrl)
+    const request = this.getAuthenticatedRequest(
+      this.config.userInfoUrl || this.userInfoUrl,
+      accessToken
+    )
 
     /**
      * Allow end user to configure the request. This should be called after your custom
@@ -219,6 +202,8 @@ export class SeznamDriver extends Oauth2Driver<SeznamDriverAccessToken, SeznamDr
      * domain je část uživatelského jména (tj. e-mailové adresy) za zavináčem
      * firstname je křestní jméno, pokud jej uživatel vyplnil
      * lastname je příjmení, pokud jej uživatel vyplnil
+     * TODO
+     * other scopes
      */
     return {
       id: body.oauth_user_id,
