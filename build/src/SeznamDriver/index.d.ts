@@ -107,6 +107,10 @@ export declare class SeznamDriver extends Oauth2Driver<SeznamDriverAccessToken, 
      */
     accessDenied(): boolean;
     /**
+     * Returns the HTTP request with the authorization header set
+     */
+    protected getAuthenticatedRequest(url: string, token: string): ApiRequest;
+    /**
      * Get the user details by query the provider API. This method must return
      * the access token and the user details both. Checkout the google
      * implementation for same.

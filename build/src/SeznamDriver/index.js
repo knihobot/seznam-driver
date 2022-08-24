@@ -103,6 +103,16 @@ class SeznamDriver extends standalone_1.Oauth2Driver {
         return this.ctx.request.input('error') === 'user_denied';
     }
     /**
+     * Returns the HTTP request with the authorization header set
+     */
+    getAuthenticatedRequest(url, token) {
+        const request = this.httpClient(url);
+        request.header('Authorization', `bearer ${token}`);
+        request.header('Accept', 'application/json');
+        request.parseAs('json');
+        return request;
+    }
+    /**
      * Get the user details by query the provider API. This method must return
      * the access token and the user details both. Checkout the google
      * implementation for same.
@@ -111,43 +121,10 @@ class SeznamDriver extends standalone_1.Oauth2Driver {
      */
     async user(callback) {
         const accessToken = await this.accessToken();
-        const request = this.httpClient(this.config.userInfoUrl || this.userInfoUrl);
-        request.header('Authorization', accessToken.type + ' ' + accessToken.token);
-        request.parseAs('json');
-        /**
-         * Allow end user to configure the request. This should be called after your custom
-         * configuration, so that the user can override them (if required)
-         */
-        if (typeof callback === 'function') {
-            callback(request);
-        }
-        /**
-         * Write your implementation details here
-         */
-        const body = await request.get();
-        /**
-         * identity (= response body)
-         * Scope identity je povinný a uživatel jej nesmí odmítnout. Díky němu budou v odpovědi na /api/v1/user tyto položky:
-         * oauth_user_id je unikátní trvalý identifikátor uživatelského účtu
-         * username je část uživatelského jména (tj. e-mailové adresy) před zavináčem
-         * domain je část uživatelského jména (tj. e-mailové adresy) za zavináčem
-         * firstname je křestní jméno, pokud jej uživatel vyplnil
-         * lastname je příjmení, pokud jej uživatel vyplnil
-         */
-        return {
-            id: body.oauth_user_id,
-            nickName: body.username,
-            name: body.firstname + ' ' + body.lastname,
-            email: body.username + '@' + body.domain,
-            avatarUrl: null,
-            emailVerificationState: 'verified',
-            original: body,
-            token: accessToken,
-        };
+        return this.userFromToken(accessToken.token, callback);
     }
     async userFromToken(accessToken, callback) {
-        console.log('userfromToken');
-        const request = this.httpClient(this.config.userInfoUrl || this.userInfoUrl);
+        const request = this.getAuthenticatedRequest(this.config.userInfoUrl || this.userInfoUrl, accessToken);
         /**
          * Allow end user to configure the request. This should be called after your custom
          * configuration, so that the user can override them (if required)
@@ -167,6 +144,8 @@ class SeznamDriver extends standalone_1.Oauth2Driver {
          * domain je část uživatelského jména (tj. e-mailové adresy) za zavináčem
          * firstname je křestní jméno, pokud jej uživatel vyplnil
          * lastname je příjmení, pokud jej uživatel vyplnil
+         * TODO
+         * other scopes
          */
         return {
             id: body.oauth_user_id,
