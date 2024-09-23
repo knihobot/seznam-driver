@@ -8,12 +8,6 @@
 |
 */
 
-/**
-|--------------------------------------------------------------------------
- *  Search keyword "YourDriver" and replace it with a meaningful name
-|--------------------------------------------------------------------------
- */
-
 import { Oauth2Driver } from '@adonisjs/ally'
 import type { HttpContext } from '@adonisjs/core/http'
 import type { AllyDriverContract, AllyUserContract, ApiRequestContract } from '@adonisjs/ally/types'
@@ -24,7 +18,7 @@ import type { AllyDriverContract, AllyUserContract, ApiRequestContract } from '@
  * token must have "token" and "type" properties and you may
  * define additional properties (if needed)
  */
-export type YourDriverAccessToken = {
+export type SeznamDriverAccessToken = {
   token: string
   type: 'bearer'
 }
@@ -32,12 +26,12 @@ export type YourDriverAccessToken = {
 /**
  * Scopes accepted by the driver implementation.
  */
-export type YourDriverScopes = string
+export type SeznamDriverScopes = string
 
 /**
  * The configuration accepted by the driver implementation.
  */
-export type YourDriverConfig = {
+export type SeznamDriverConfig = {
   clientId: string
   clientSecret: string
   callbackUrl: string
@@ -50,9 +44,9 @@ export type YourDriverConfig = {
  * Driver implementation. It is mostly configuration driven except the API call
  * to get user info.
  */
-export class YourDriver
-  extends Oauth2Driver<YourDriverAccessToken, YourDriverScopes>
-  implements AllyDriverContract<YourDriverAccessToken, YourDriverScopes>
+export class SeznamDriver
+  extends Oauth2Driver<SeznamDriverAccessToken, SeznamDriverScopes>
+  implements AllyDriverContract<SeznamDriverAccessToken, SeznamDriverScopes>
 {
   /**
    * The URL for the redirect request. The user will be redirected on this page
@@ -60,21 +54,21 @@ export class YourDriver
    *
    * Do not define query strings in this URL.
    */
-  protected authorizeUrl = ''
+  protected authorizeUrl = 'https://login.szn.cz/api/v1/oauth/auth'
 
   /**
    * The URL to hit to exchange the authorization code for the access token
    *
    * Do not define query strings in this URL.
    */
-  protected accessTokenUrl = ''
+  protected accessTokenUrl = 'https://login.szn.cz/api/v1/oauth/token'
 
   /**
    * The URL to hit to get the user details
    *
    * Do not define query strings in this URL.
    */
-  protected userInfoUrl = ''
+  protected userInfoUrl = 'https://login.szn.cz/api/v1/user'
 
   /**
    * The param name for the authorization code. Read the documentation of your oauth
@@ -95,7 +89,7 @@ export class YourDriver
    * approach is to prefix the oauth provider name to `oauth_state` value. For example:
    * For example: "facebook_oauth_state"
    */
-  protected stateCookieName = 'YourDriver_oauth_state'
+  protected stateCookieName = 'seznam_oauth_state'
 
   /**
    * Parameter name to be used for sending and receiving the state from.
@@ -117,7 +111,7 @@ export class YourDriver
 
   constructor(
     ctx: HttpContext,
-    public config: YourDriverConfig
+    public config: SeznamDriverConfig
   ) {
     super(ctx, config)
 
@@ -135,7 +129,10 @@ export class YourDriver
    * is made by the base implementation of "Oauth2" driver and this is a
    * hook to pre-configure the request.
    */
-  // protected configureRedirectRequest(request: RedirectRequest<YourDriverScopes>) {}
+  protected configureRedirectRequest(request: RedirectRequest<SeznamDriverScopes>) {
+    request.param('response_type', 'code')
+    request.scopes(this.config.scopes || ['identity'])
+  }
 
   /**
    * Optionally configure the access token request. The actual request is made by
@@ -153,6 +150,18 @@ export class YourDriver
   }
 
   /**
+   * Returns the HTTP request with the authorization header set
+   */
+  protected getAuthenticatedRequest(url: string, token: string) {
+    const request = this.httpClient(url)
+    request.header('Authorization', `bearer ${token}`)
+    request.header('Accept', 'application/json')
+    request.parseAs('json')
+    return request
+  }
+
+
+  /**
    * Get the user details by query the provider API. This method must return
    * the access token and the user details both. Checkout the google
    * implementation for same.
@@ -160,33 +169,24 @@ export class YourDriver
    * https://github.com/adonisjs/ally/blob/develop/src/Drivers/Google/index.ts#L191-L199
    */
   async user(
-    callback?: (request: ApiRequestContract) => void
-  ): Promise<AllyUserContract<YourDriverAccessToken>> {
+    callback?: (request: ApiRequest) => void
+  ): Promise<AllyUserContract<SeznamDriverAccessToken>> {
     const accessToken = await this.accessToken()
-    const request = this.httpClient(this.config.userInfoUrl || this.userInfoUrl)
-
-    /**
-     * Allow end user to configure the request. This should be called after your custom
-     * configuration, so that the user can override them (if needed)
-     */
-    if (typeof callback === 'function') {
-      callback(request)
-    }
-
-    /**
-     * Write your implementation details here.
-     */
+    return this.userFromToken(accessToken.token, callback)
   }
 
   async userFromToken(
     accessToken: string,
-    callback?: (request: ApiRequestContract) => void
+    callback?: (request: ApiRequest) => void
   ): Promise<AllyUserContract<{ token: string; type: 'bearer' }>> {
-    const request = this.httpClient(this.config.userInfoUrl || this.userInfoUrl)
+    const request = this.getAuthenticatedRequest(
+      this.config.userInfoUrl || this.userInfoUrl,
+      accessToken
+    )
 
     /**
      * Allow end user to configure the request. This should be called after your custom
-     * configuration, so that the user can override them (if needed)
+     * configuration, so that the user can override them (if required)
      */
     if (typeof callback === 'function') {
       callback(request)
@@ -195,6 +195,29 @@ export class YourDriver
     /**
      * Write your implementation details here
      */
+    const body = await request.get()
+
+    /**
+     * identity (= response body)
+     * Scope identity je povinný a uživatel jej nesmí odmítnout. Díky němu budou v odpovědi na /api/v1/user tyto položky:
+     * oauth_user_id je unikátní trvalý identifikátor uživatelského účtu
+     * username je část uživatelského jména (tj. e-mailové adresy) před zavináčem
+     * domain je část uživatelského jména (tj. e-mailové adresy) za zavináčem
+     * firstname je křestní jméno, pokud jej uživatel vyplnil
+     * lastname je příjmení, pokud jej uživatel vyplnil
+     * TODO
+     * other scopes
+     */
+    return {
+      id: body.oauth_user_id,
+      nickName: body.username,
+      name: body.firstname + ' ' + body.lastname,
+      email: body.username + '@' + body.domain,
+      avatarUrl: null,
+      emailVerificationState: 'verified',
+      original: body,
+      token: { token: accessToken, type: 'bearer' },
+    }
   }
 }
 
@@ -202,6 +225,6 @@ export class YourDriver
  * The factory function to reference the driver implementation
  * inside the "config/ally.ts" file.
  */
-export function YourDriverService(config: YourDriverConfig): (ctx: HttpContext) => YourDriver {
-  return (ctx) => new YourDriver(ctx, config)
+export function SeznamDriverService(config: SeznamDriverConfig): (ctx: HttpContext) => SeznamDriver {
+  return (ctx) => new SeznamDriver(ctx, config)
 }
