@@ -108,7 +108,7 @@ export class SeznamDriver
   /**
    * The separator indentifier for defining multiple scopes
    */
-  protected scopesSeparator = ' '
+  protected scopesSeparator = ','
 
   constructor(
     ctx: HttpContext,
