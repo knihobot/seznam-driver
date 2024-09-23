@@ -38,7 +38,7 @@ export type SeznamDriverConfig = {
   authorizeUrl?: string
   accessTokenUrl?: string
   userInfoUrl?: string
-  scopes?: SeznamDriverScopes
+  scopes?: SeznamDriverScopes[]
 }
 
 /**
@@ -132,7 +132,7 @@ export class SeznamDriver
    */
   protected configureRedirectRequest(request: RedirectRequest<SeznamDriverScopes>) {
     request.param('response_type', 'code')
-    request.scopes(this.config.scopes ? [this.config.scopes] : ['identity'])
+    request.scopes(this.config.scopes || ['identity'])
   }
 
   /**
