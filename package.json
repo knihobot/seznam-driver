@@ -1,7 +1,7 @@
 {
   "name": "seznam-driver",
-  "version": "0.0.3",
   "description": "Custom Seznam driver for Adonis Ally",
+  "version": "0.0.3",
   "main": "index.js",
   "type": "module",
   "files": [
