@@ -2,32 +2,20 @@
   "name": "seznam-driver",
   "version": "0.0.3",
   "description": "Custom Seznam driver for Adonis Ally",
-  "main": "build/providers/index.js",
-  "types": "build/providers/index.d.ts",
+  "main": "index.js",
+  "type": "module",
   "files": [
-    "build/src",
-    "build/providers",
-    "build/standalone.js",
-    "build/standalone.d.ts",
-    "build/instructions.md"
+    "build/index.js",
+    "build/index.d.ts",
+    "build/src"
   ],
   "scripts": {
-    "clean": "del build",
-    "copyfiles": "copyfiles \"instructions.md\" build",
-    "compile": "npm run lint && npm run clean && tsc",
-    "build": "npm run compile && npm run copyfiles",
-    "prepublishOnly": "npm run build",
     "lint": "eslint . --ext=.ts",
     "format": "prettier --write .",
-    "version": "npm run build"
+    "typecheck": "tsc --noEmit",
+    "pretest": "npm run lint",
+    "build": "tsc"
   },
-  "keywords": [
-    "social-auth",
-    "adonisjs",
-    "adonis-ally"
-  ],
-  "author": "Knihobot s.r.o.",
-  "license": "MIT",
   "devDependencies": {
     "@adonisjs/ally": "^5.0.0-7",
     "@adonisjs/core": "^6.1.5-32",
@@ -42,15 +30,15 @@
     "@adonisjs/ally": "^5.0.0-7",
     "@adonisjs/core": "^6.1.5-32"
   },
-  "adonisjs": {
-    "instructionsMd": "./build/instructions.md",
-    "env": {
-      "SEZNAM_CLIENT_ID": "",
-      "SEZNAM_CLIENT_SECRET": ""
-    },
-    "types": "seznam-driver",
-    "providers": [
-      "seznam-driver"
-    ]
-  }
+  "author": "Knihobot s.r.o.",
+  "license": "MIT",
+  "keywords": [
+    "social-auth",
+    "adonisjs-ally",
+    "adonisjs"
+  ],
+  "eslintConfig": {
+    "extends": "@adonisjs/eslint-config/package"
+  },
+  "prettier": "@adonisjs/prettier-config"
 }

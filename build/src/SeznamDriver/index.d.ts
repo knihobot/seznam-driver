@@ -1,6 +1,3 @@
-/// <reference types="@adonisjs/ally" />
-/// <reference types="@adonisjs/http-server/build/adonis-typings" />
-/// <reference types="@adonisjs/ally" />
 import type { AllyUserContract } from '@ioc:Adonis/Addons/Ally';
 import type { HttpContextContract } from '@ioc:Adonis/Core/HttpContext';
 import { Oauth2Driver, ApiRequest, RedirectRequest } from '@adonisjs/ally/build/standalone';
@@ -9,7 +6,7 @@ import { Oauth2Driver, ApiRequest, RedirectRequest } from '@adonisjs/ally/build/
  * must have "token" and "type" and you are free to add
  * more properties.
  */
-export declare type SeznamDriverAccessToken = {
+export type SeznamDriverAccessToken = {
     token: string;
     type: 'bearer';
 };
@@ -17,12 +14,12 @@ export declare type SeznamDriverAccessToken = {
  * Define a union of scopes your driver accepts. Here's an example of same
  * https://github.com/adonisjs/ally/blob/develop/adonis-typings/ally.ts#L236-L268
  */
-export declare type SeznamDriverScopes = 'identity' | 'contact-phone' | 'avatar';
+export type SeznamDriverScopes = 'identity' | 'contact-phone' | 'avatar';
 /**
  * Define the configuration options accepted by your driver. It must have the following
  * properties and you are free add more.
  */
-export declare type SeznamDriverConfig = {
+export type SeznamDriverConfig = {
     driver: 'seznam';
     clientId: string;
     clientSecret: string;
@@ -109,7 +106,7 @@ export declare class SeznamDriver extends Oauth2Driver<SeznamDriverAccessToken, 
     /**
      * Returns the HTTP request with the authorization header set
      */
-    protected getAuthenticatedRequest(url: string, token: string): ApiRequest;
+    protected getAuthenticatedRequest(url: string, token: string): any;
     /**
      * Get the user details by query the provider API. This method must return
      * the access token and the user details both. Checkout the google

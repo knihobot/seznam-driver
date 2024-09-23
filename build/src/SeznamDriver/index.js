@@ -1,4 +1,3 @@
-"use strict";
 /*
 |--------------------------------------------------------------------------
 | Ally Oauth driver
@@ -10,68 +9,67 @@
 | - Read every comment
 |
 */
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.SeznamDriver = void 0;
-const standalone_1 = require("@adonisjs/ally/build/standalone");
+import { Oauth2Driver } from '@adonisjs/ally/build/standalone';
 /**
  * Driver implementation. It is mostly configuration driven except the user calls
  */
-class SeznamDriver extends standalone_1.Oauth2Driver {
+export class SeznamDriver extends Oauth2Driver {
+    config;
+    /**
+     * The URL for the redirect request. The user will be redirected on this page
+     * to authorize the request.
+     *
+     * Do not define query strings in this URL.
+     */
+    authorizeUrl = 'https://login.szn.cz/api/v1/oauth/auth';
+    /**
+     * The URL to hit to exchange the authorization code for the access token
+     *
+     * Do not define query strings in this URL.
+     */
+    accessTokenUrl = 'https://login.szn.cz/api/v1/oauth/token';
+    /**
+     * The URL to hit to get the user details
+     *
+     * Do not define query strings in this URL.
+     */
+    userInfoUrl = 'https://login.szn.cz/api/v1/user';
+    /**
+     * The param name for the authorization code. Read the documentation of your oauth
+     * provider and update the param name to match the query string field name in
+     * which the oauth provider sends the authorization_code post redirect.
+     */
+    codeParamName = 'code';
+    /**
+     * The param name for the error. Read the documentation of your oauth provider and update
+     * the param name to match the query string field name in which the oauth provider sends
+     * the error post redirect
+     */
+    errorParamName = 'error';
+    /**
+     * Cookie name for storing the CSRF token. Make sure it is always unique. So a better
+     * approach is to prefix the oauth provider name to `oauth_state` value. For example:
+     * For example: "facebook_oauth_state"
+     */
+    stateCookieName = 'seznam_oauth_state';
+    /**
+     * Parameter name to be used for sending and receiving the state from.
+     * Read the documentation of your oauth provider and update the param
+     * name to match the query string used by the provider for exchanging
+     * the state.
+     */
+    stateParamName = 'state';
+    /**
+     * Parameter name for sending the scopes to the oauth provider.
+     */
+    scopeParamName = 'scope';
+    /**
+     * The separator indentifier for defining multiple scopes
+     */
+    scopesSeparator = ',';
     constructor(ctx, config) {
         super(ctx, config);
         this.config = config;
-        /**
-         * The URL for the redirect request. The user will be redirected on this page
-         * to authorize the request.
-         *
-         * Do not define query strings in this URL.
-         */
-        this.authorizeUrl = 'https://login.szn.cz/api/v1/oauth/auth';
-        /**
-         * The URL to hit to exchange the authorization code for the access token
-         *
-         * Do not define query strings in this URL.
-         */
-        this.accessTokenUrl = 'https://login.szn.cz/api/v1/oauth/token';
-        /**
-         * The URL to hit to get the user details
-         *
-         * Do not define query strings in this URL.
-         */
-        this.userInfoUrl = 'https://login.szn.cz/api/v1/user';
-        /**
-         * The param name for the authorization code. Read the documentation of your oauth
-         * provider and update the param name to match the query string field name in
-         * which the oauth provider sends the authorization_code post redirect.
-         */
-        this.codeParamName = 'code';
-        /**
-         * The param name for the error. Read the documentation of your oauth provider and update
-         * the param name to match the query string field name in which the oauth provider sends
-         * the error post redirect
-         */
-        this.errorParamName = 'error';
-        /**
-         * Cookie name for storing the CSRF token. Make sure it is always unique. So a better
-         * approach is to prefix the oauth provider name to `oauth_state` value. For example:
-         * For example: "facebook_oauth_state"
-         */
-        this.stateCookieName = 'seznam_oauth_state';
-        /**
-         * Parameter name to be used for sending and receiving the state from.
-         * Read the documentation of your oauth provider and update the param
-         * name to match the query string used by the provider for exchanging
-         * the state.
-         */
-        this.stateParamName = 'state';
-        /**
-         * Parameter name for sending the scopes to the oauth provider.
-         */
-        this.scopeParamName = 'scope';
-        /**
-         * The separator indentifier for defining multiple scopes
-         */
-        this.scopesSeparator = ',';
         /**
          * Extremely important to call the following method to clear the
          * state set by the redirect request.
@@ -159,4 +157,3 @@ class SeznamDriver extends standalone_1.Oauth2Driver {
         };
     }
 }
-exports.SeznamDriver = SeznamDriver;
