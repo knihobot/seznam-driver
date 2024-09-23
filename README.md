@@ -40,6 +40,7 @@ Following are the steps to get started.
   {
     "name": "package-name",
     "description": "",
+    "author": "Knihobot s.r.o.",
     "adonisjs": {
       "types": "package-name",
       "providers": ["package-name"]
