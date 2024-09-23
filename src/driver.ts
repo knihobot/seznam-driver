@@ -32,6 +32,7 @@ export type SeznamDriverScopes = 'identity' | 'contact-phone' | 'avatar'
  * The configuration accepted by the driver implementation.
  */
 export type SeznamDriverConfig = {
+  driver: 'seznam'
   clientId: string
   clientSecret: string
   callbackUrl: string
