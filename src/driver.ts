@@ -8,7 +8,7 @@
 |
 */
 
-import { Oauth2Driver } from '@adonisjs/ally'
+import { Oauth2Driver, RedirectRequest } from '@adonisjs/ally'
 import type { HttpContext } from '@adonisjs/core/http'
 import type { AllyDriverContract, AllyUserContract, ApiRequestContract } from '@adonisjs/ally/types'
 
@@ -26,7 +26,7 @@ export type SeznamDriverAccessToken = {
 /**
  * Scopes accepted by the driver implementation.
  */
-export type SeznamDriverScopes = string
+export type SeznamDriverScopes = 'identity' | 'contact-phone' | 'avatar'
 
 /**
  * The configuration accepted by the driver implementation.
@@ -38,6 +38,7 @@ export type SeznamDriverConfig = {
   authorizeUrl?: string
   accessTokenUrl?: string
   userInfoUrl?: string
+  scopes?: SeznamDriverScopes
 }
 
 /**
@@ -131,7 +132,7 @@ export class SeznamDriver
    */
   protected configureRedirectRequest(request: RedirectRequest<SeznamDriverScopes>) {
     request.param('response_type', 'code')
-    request.scopes(this.config.scopes || ['identity'])
+    request.scopes(this.config.scopes ? [this.config.scopes] : ['identity'])
   }
 
   /**
@@ -160,7 +161,6 @@ export class SeznamDriver
     return request
   }
 
-
   /**
    * Get the user details by query the provider API. This method must return
    * the access token and the user details both. Checkout the google
@@ -169,7 +169,7 @@ export class SeznamDriver
    * https://github.com/adonisjs/ally/blob/develop/src/Drivers/Google/index.ts#L191-L199
    */
   async user(
-    callback?: (request: ApiRequest) => void
+    callback?: (request: ApiRequestContract) => void
   ): Promise<AllyUserContract<SeznamDriverAccessToken>> {
     const accessToken = await this.accessToken()
     return this.userFromToken(accessToken.token, callback)
@@ -177,7 +177,7 @@ export class SeznamDriver
 
   async userFromToken(
     accessToken: string,
-    callback?: (request: ApiRequest) => void
+    callback?: (request: ApiRequestContract) => void
   ): Promise<AllyUserContract<{ token: string; type: 'bearer' }>> {
     const request = this.getAuthenticatedRequest(
       this.config.userInfoUrl || this.userInfoUrl,
@@ -225,6 +225,8 @@ export class SeznamDriver
  * The factory function to reference the driver implementation
  * inside the "config/ally.ts" file.
  */
-export function SeznamDriverService(config: SeznamDriverConfig): (ctx: HttpContext) => SeznamDriver {
+export function SeznamDriverService(
+  config: SeznamDriverConfig
+): (ctx: HttpContext) => SeznamDriver {
   return (ctx) => new SeznamDriver(ctx, config)
 }
