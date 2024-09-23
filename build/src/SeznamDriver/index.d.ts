@@ -1,8 +1,9 @@
 /// <reference types="@adonisjs/ally" />
 /// <reference types="@adonisjs/http-server/build/adonis-typings" />
+/// <reference types="@adonisjs/ally" />
 import type { AllyUserContract } from '@ioc:Adonis/Addons/Ally';
 import type { HttpContextContract } from '@ioc:Adonis/Core/HttpContext';
-import { Oauth2Driver, ApiRequest } from '@adonisjs/ally/build/standalone';
+import { Oauth2Driver, ApiRequest, RedirectRequest } from '@adonisjs/ally/build/standalone';
 /**
  * Define the access token object properties in this type. It
  * must have "token" and "type" and you are free to add
@@ -16,7 +17,7 @@ export declare type SeznamDriverAccessToken = {
  * Define a union of scopes your driver accepts. Here's an example of same
  * https://github.com/adonisjs/ally/blob/develop/adonis-typings/ally.ts#L236-L268
  */
-export declare type SeznamDriverScopes = 'identity';
+export declare type SeznamDriverScopes = 'identity' | 'contact-phone' | 'avatar';
 /**
  * Define the configuration options accepted by your driver. It must have the following
  * properties and you are free add more.
@@ -29,6 +30,7 @@ export declare type SeznamDriverConfig = {
     authorizeUrl?: string;
     accessTokenUrl?: string;
     userInfoUrl?: string;
+    scopes?: SeznamDriverScopes[];
 };
 /**
  * Driver implementation. It is mostly configuration driven except the user calls
@@ -93,6 +95,7 @@ export declare class SeznamDriver extends Oauth2Driver<SeznamDriverAccessToken, 
      * is made by the base implementation of "Oauth2" driver and this is a
      * hook to pre-configure the request.
      */
+    protected configureRedirectRequest(request: RedirectRequest<SeznamDriverScopes>): void;
     /**
      * Optionally configure the access token request. The actual request is made by
      * the base implementation of "Oauth2" driver and this is a hook to pre-configure
@@ -103,6 +106,10 @@ export declare class SeznamDriver extends Oauth2Driver<SeznamDriverAccessToken, 
      * means "ACCESS DENIED".
      */
     accessDenied(): boolean;
+    /**
+     * Returns the HTTP request with the authorization header set
+     */
+    protected getAuthenticatedRequest(url: string, token: string): ApiRequest;
     /**
      * Get the user details by query the provider API. This method must return
      * the access token and the user details both. Checkout the google
