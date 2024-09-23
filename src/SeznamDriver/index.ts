@@ -3,20 +3,21 @@
 | Ally Oauth driver
 |--------------------------------------------------------------------------
 |
-| Make sure you through the code and comments properly and make necessary
-| changes as per the requirements of your implementation.
+| This is a dummy implementation of the Oauth driver. Make sure you
+|
+| - Got through every line of code
+| - Read every comment
 |
 */
 
-import { Oauth2Driver, RedirectRequest } from '@adonisjs/ally'
-import type { HttpContext } from '@adonisjs/core/http'
-import type { AllyDriverContract, AllyUserContract, ApiRequestContract } from '@adonisjs/ally/types'
+import type { AllyUserContract } from '@ioc:Adonis/Addons/Ally'
+import type { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
+import { Oauth2Driver, ApiRequest, RedirectRequest } from '@adonisjs/ally/build/standalone'
 
 /**
- *
- * Access token returned by your driver implementation. An access
- * token must have "token" and "type" properties and you may
- * define additional properties (if needed)
+ * Define the access token object properties in this type. It
+ * must have "token" and "type" and you are free to add
+ * more properties.
  */
 export type SeznamDriverAccessToken = {
   token: string
@@ -24,12 +25,14 @@ export type SeznamDriverAccessToken = {
 }
 
 /**
- * Scopes accepted by the driver implementation.
+ * Define a union of scopes your driver accepts. Here's an example of same
+ * https://github.com/adonisjs/ally/blob/develop/adonis-typings/ally.ts#L236-L268
  */
 export type SeznamDriverScopes = 'identity' | 'contact-phone' | 'avatar'
 
 /**
- * The configuration accepted by the driver implementation.
+ * Define the configuration options accepted by your driver. It must have the following
+ * properties and you are free add more.
  */
 export type SeznamDriverConfig = {
   driver: 'seznam'
@@ -43,13 +46,9 @@ export type SeznamDriverConfig = {
 }
 
 /**
- * Driver implementation. It is mostly configuration driven except the API call
- * to get user info.
+ * Driver implementation. It is mostly configuration driven except the user calls
  */
-export class SeznamDriver
-  extends Oauth2Driver<SeznamDriverAccessToken, SeznamDriverScopes>
-  implements AllyDriverContract<SeznamDriverAccessToken, SeznamDriverScopes>
-{
+export class SeznamDriver extends Oauth2Driver<SeznamDriverAccessToken, SeznamDriverScopes> {
   /**
    * The URL for the redirect request. The user will be redirected on this page
    * to authorize the request.
@@ -111,10 +110,7 @@ export class SeznamDriver
    */
   protected scopesSeparator = ','
 
-  constructor(
-    ctx: HttpContext,
-    public config: SeznamDriverConfig
-  ) {
+  constructor(ctx: HttpContextContract, public config: SeznamDriverConfig) {
     super(ctx, config)
 
     /**
@@ -147,7 +143,7 @@ export class SeznamDriver
    * Update the implementation to tell if the error received during redirect
    * means "ACCESS DENIED".
    */
-  accessDenied() {
+  public accessDenied() {
     return this.ctx.request.input('error') === 'user_denied'
   }
 
@@ -169,16 +165,16 @@ export class SeznamDriver
    *
    * https://github.com/adonisjs/ally/blob/develop/src/Drivers/Google/index.ts#L191-L199
    */
-  async user(
-    callback?: (request: ApiRequestContract) => void
+  public async user(
+    callback?: (request: ApiRequest) => void
   ): Promise<AllyUserContract<SeznamDriverAccessToken>> {
     const accessToken = await this.accessToken()
     return this.userFromToken(accessToken.token, callback)
   }
 
-  async userFromToken(
+  public async userFromToken(
     accessToken: string,
-    callback?: (request: ApiRequestContract) => void
+    callback?: (request: ApiRequest) => void
   ): Promise<AllyUserContract<{ token: string; type: 'bearer' }>> {
     const request = this.getAuthenticatedRequest(
       this.config.userInfoUrl || this.userInfoUrl,
@@ -220,14 +216,4 @@ export class SeznamDriver
       token: { token: accessToken, type: 'bearer' },
     }
   }
-}
-
-/**
- * The factory function to reference the driver implementation
- * inside the "config/ally.ts" file.
- */
-export function SeznamDriverService(
-  config: SeznamDriverConfig
-): (ctx: HttpContext) => SeznamDriver {
-  return (ctx) => new SeznamDriver(ctx, config)
 }
